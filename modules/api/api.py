@@ -382,6 +382,7 @@ class Api:
                     shared.total_tqdm.clear()
 
         b64images = list(map(encode_pil_to_base64, processed.images)) if send_images else []
+        shared.state.current_processed_images = b64images
 
         return models.TextToImageResponse(images=b64images, parameters=vars(txt2imgreq), info=processed.js())
 
@@ -443,6 +444,7 @@ class Api:
                     shared.total_tqdm.clear()
 
         b64images = list(map(encode_pil_to_base64, processed.images)) if send_images else []
+        shared.state.current_processed_images = b64images
 
         if not img2imgreq.include_init_images:
             img2imgreq.init_images = None
@@ -489,7 +491,7 @@ class Api:
         # copy from check_progress_call of ui.py
 
         if shared.state.job_count == 0:
-            return models.ProgressResponse(progress=0, eta_relative=0, state=shared.state.dict(), textinfo=shared.state.textinfo)
+            return models.ProgressResponse(progress=0, eta_relative=0, state=shared.state.dict(), textinfo=shared.state.textinfo, current_processed_images=shared.state.current_processed_images)
 
         # avoid dividing zero
         progress = 0.01
@@ -511,7 +513,7 @@ class Api:
         if shared.state.current_image and not req.skip_current_image:
             current_image = encode_pil_to_base64(shared.state.current_image)
 
-        return models.ProgressResponse(progress=progress, eta_relative=eta_relative, state=shared.state.dict(), current_image=current_image, textinfo=shared.state.textinfo)
+        return models.ProgressResponse(progress=progress, eta_relative=eta_relative, state=shared.state.dict(), current_image=current_image, textinfo=shared.state.textinfo, current_processed_images=shared.state.current_processed_images)
 
     def interrogateapi(self, interrogatereq: models.InterrogateRequest):
         image_b64 = interrogatereq.image
@@ -788,4 +790,3 @@ class Api:
     def stop_webui(request):
         shared.state.server_command = "stop"
         return Response("Stopping.")
-
